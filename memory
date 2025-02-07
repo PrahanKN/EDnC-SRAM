@@ -1,0 +1,17 @@
+module sram (
+    input clk,
+    input we,              // Write enable
+    input [3:0] addr,      // 4-bit address (16 locations)
+    input [6:0] data_in,   // 7-bit data input (encoded data)
+    output reg [6:0] data_out // 7-bit data output
+);
+    reg [6:0] memory [0:15]; // 16 locations of 7 bits each
+
+    always @(posedge clk) begin
+        if (we) begin
+            memory[addr] <= data_in; // Write to memory
+        end else begin
+            data_out <= memory[addr]; // Read from memory
+        end
+    end
+endmodule
