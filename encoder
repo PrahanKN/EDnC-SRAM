@@ -1,0 +1,13 @@
+module hamming_encoder (
+    input [3:0] data_in,   // 4-bit data input
+    output [6:0] code_out  // 7-bit encoded output (4 data + 3 parity bits)
+);
+    // Generate the 3 parity bits based on Hamming(7,4) logic
+    assign code_out[0] = data_in[0] ^ data_in[1] ^ data_in[3]; // Parity P1
+    assign code_out[1] = data_in[0] ^ data_in[2] ^ data_in[3]; // Parity P2
+    assign code_out[2] = data_in[0];  // Data bit D1
+    assign code_out[3] = data_in[1] ^ data_in[2] ^ data_in[3]; // Parity P3
+    assign code_out[4] = data_in[1];  // Data bit D2
+    assign code_out[5] = data_in[2];  // Data bit D3
+    assign code_out[6] = data_in[3];  // Data bit D4
+endmodule
