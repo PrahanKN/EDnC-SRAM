@@ -1,0 +1,36 @@
+module top_level (
+    input clk,
+    input we,              // Write enable
+    input [3:0] addr,      // Address (4-bit)
+    input [3:0] data_in,   // 4-bit data input
+    output [3:0] data_out, // 4-bit decoded output
+    output error_detected  // Error detection flag
+);
+    wire [6:0] encoded_data;  // 7-bit encoded data
+    wire [6:0] sram_data_out; // Data read from SRAM
+    wire [3:0] decoded_data;  // 4-bit decoded data
+
+    // Instantiate Hamming Encoder
+    hamming_encoder encoder (
+        .data_in(data_in),
+        .code_out(encoded_data)
+    );
+
+    // Instantiate SRAM
+    sram memory (
+        .clk(clk),
+        .we(we),
+        .addr(addr),
+        .data_in(encoded_data),
+        .data_out(sram_data_out)
+    );
+
+    // Instantiate Hamming Decoder
+    hamming_decoder decoder (
+        .code_in(sram_data_out),
+        .data_out(decoded_data),
+        .error_detected(error_detected)
+    );
+
+    assign data_out = decoded_data;  // Output the decoded data
+endmodule
