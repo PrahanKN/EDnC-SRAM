@@ -1,0 +1,28 @@
+module hamming_decoder (
+    input [6:0] code_in,    // 7-bit encoded input
+    output [3:0] data_out,  // 4-bit decoded data output
+    output reg error_detected // Error flag (1 if error detected)
+);
+    wire [2:0] parity_check; // Parity check bits
+    reg [6:0] corrected_code; // Corrected code should be a reg, not a wire
+
+    // Calculate the parity check bits
+    assign parity_check[0] = code_in[0] ^ code_in[2] ^ code_in[4] ^ code_in[6]; // P1
+    assign parity_check[1] = code_in[1] ^ code_in[2] ^ code_in[5] ^ code_in[6]; // P2
+    assign parity_check[2] = code_in[3] ^ code_in[4] ^ code_in[5] ^ code_in[6]; // P3
+
+    // If any parity check fails, there is an error
+    always @(*) begin
+        if (parity_check != 3'b000) begin
+            error_detected = 1;  // Set the error flag to 1
+            // Correct the error by flipping the faulty bit
+            corrected_code = code_in ^ (1 << parity_check); // Error correction logic
+        end else begin
+            error_detected = 0;  // No error detected
+            corrected_code = code_in; // No change to code
+        end
+    end
+
+    // Extract the decoded data from the corrected code
+    assign data_out = corrected_code[3:0]; // Return the original data bits
+endmodule
