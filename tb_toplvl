@@ -1,0 +1,86 @@
+`timescale 1ns / 1ps
+
+module tb_top_level;
+
+    // Testbench signals
+    reg clk;
+    reg we;              // Write Enable
+    reg [3:0] addr;      // Address (4-bit)
+    reg [3:0] data_in;   // 4-bit data input
+    wire [3:0] data_out; // 4-bit decoded output
+    wire error_detected; // Error detection flag
+
+    // Instantiate the top-level module
+    top_level uut (
+        .clk(clk),
+        .we(we),
+        .addr(addr),
+        .data_in(data_in),
+        .data_out(data_out),
+        .error_detected(error_detected)
+    );
+
+    // Clock generation
+    always begin
+        #5 clk = ~clk; // 100 MHz clock
+    end
+
+    // Stimulus process
+    initial begin
+        // Initialize signals
+        clk = 0;
+        we = 0;
+        addr = 4'b0000;
+        data_in = 4'b0000;
+
+        // Wait for global reset to finish
+        #10;
+
+        // Test 1: Write data to SRAM and read it back without errors
+        $display("Test 1: Write and Read without errors");
+        
+        // Write 4-bit data to SRAM (Hamming encoding happens)
+        we = 1; addr = 4'b0001; data_in = 4'b1010; #10; // Write "1010" to address 1
+        
+        // Stop write operation and read back from SRAM
+        we = 0; addr = 4'b0001; #10; // Read from address 1
+        
+        // Check decoded data and ensure no error
+        $display("Read data: %b (Expected: 1010), Error detected: %b", data_out, error_detected);
+        if (data_out !== 4'b1010) $display("ERROR: Data mismatch!");
+
+        // Test 2: Introduce an error in the SRAM data and check error detection
+        $display("Test 2: Write, introduce error and read back with error detection");
+        
+        // Write another 4-bit data (Hamming encoding happens)
+        we = 1; addr = 4'b0010; data_in = 4'b1100; #10; // Write "1100" to address 2
+        
+        // Simulate an error by flipping the 3rd bit of the data in SRAM (use an incorrect value)
+        // For instance, flip the bit at position 5, making the data incorrect.
+        uut.memory.memory[2][5] = ~uut.memory.memory[2][5]; // Manually flip the bit
+        
+        // Stop write operation and read back from SRAM
+        we = 0; addr = 4'b0010; #10; // Read from address 2
+        
+        // Check if the error was detected and corrected
+        $display("Read data: %b (Expected: 1100), Error detected: %b", data_out, error_detected);
+        if (data_out !== 4'b1100) $display("ERROR: Data mismatch!");
+
+        // Test 3: Test another write and read scenario without errors
+        $display("Test 3: Write and Read without errors");
+        
+        // Write data "0111" to address 3
+        we = 1; addr = 4'b0011; data_in = 4'b0111; #10; // Write "0111" to address 3
+        
+        // Read back data from SRAM at address 3
+        we = 0; addr = 4'b0011; #10; // Read from address 3
+        
+        // Check decoded data and ensure no error
+        $display("Read data: %b (Expected: 0111), Error detected: %b", data_out, error_detected);
+        if (data_out !== 4'b0111) $display("ERROR: Data mismatch!");
+
+        // Finish the simulation
+        $finish;
+    end
+
+endmodule
